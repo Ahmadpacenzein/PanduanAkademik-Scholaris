@@ -8,7 +8,7 @@ export const MOCK_STUDENT = {
   phone: '+6282386763727',
   major: 'Teknik Informatika',
   semester: 6,
-  gpa: 3.97,
+  gpa: 0,
   faculty: 'Teknik',
   university: 'Universitas Islam Riau (UIR)',
   campus_location: {

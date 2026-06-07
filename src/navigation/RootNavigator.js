@@ -28,9 +28,9 @@ const BottomTabNavigator = () => {
         tabBarInactiveTintColor: colors.secondary,
         tabBarLabelPosition: 'below-icon',
         tabBarStyle: {
-          paddingBottom: 8,
+          paddingBottom: 12,
           paddingTop: 8,
-          height: 65,
+          height: 95,
           borderTopColor: colors.outlineVariant,
           borderTopWidth: 1,
           backgroundColor: colors.surfaceContainerLowest,
