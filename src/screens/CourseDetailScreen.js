@@ -34,15 +34,21 @@ const CourseDetailScreen = ({ route, navigation }) => {
       const result = await courseService.enrollCourse(course.id, studentId);
       setEnrollmentStatus(true);
       Alert.alert('Berhasil', result.message, [
-        {
-          text: 'Kembali ke Beranda',
-          onPress: () => navigation.navigate(ROUTES.HOME),
-        },
-        {
-          text: 'Lihat Mata Kuliah Lainnya',
-          onPress: () => navigation.navigate(ROUTES.COURSES),
-        },
-      ]);
+  {
+    text: 'Kembali ke Beranda',
+    onPress: () =>
+      navigation.navigate(ROUTES.MAIN_TABS, {
+        screen: ROUTES.HOME,
+      }),
+  },
+  {
+    text: 'Lihat Mata Kuliah Lainnya',
+    onPress: () =>
+      navigation.navigate(ROUTES.MAIN_TABS, {
+        screen: ROUTES.COURSES,
+      }),
+  },
+]);
     } catch (error) {
       Alert.alert('Gagal', error.message);
     } finally {
