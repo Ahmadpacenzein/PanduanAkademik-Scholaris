@@ -124,12 +124,27 @@ const CourseListScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.headerSection}>
-        <Text style={[styles.pageTitle, typography.headlineMedium]}>
-          Mata Kuliah
-        </Text>
-        <Text style={[styles.pageSubtitle, typography.bodyMedium]}>
-          Temukan dan daftar mata kuliah yang Anda inginkan
-        </Text>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={[styles.pageTitle, typography.headlineMedium]}>
+              Mata Kuliah
+            </Text>
+            <Text style={[styles.pageSubtitle, typography.bodyMedium]}>
+              Temukan dan daftar mata kuliah yang Anda inginkan
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => navigation.navigate(ROUTES.ADD_COURSE)}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons
+              name="plus"
+              size={24}
+              color={colors.onPrimary}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Search Bar */}
@@ -215,6 +230,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 16,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  addButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   pageTitle: {
     color: colors.onSurface,

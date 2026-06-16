@@ -199,6 +199,109 @@ export const getCoursesWithFilters = async (filters = {}) => {
   });
 };
 
+/**
+ * Tambah mata kuliah baru
+ * @param {object} courseData - {name, code, credits, lecturer, lecturerEmail, lecturerPhone, description, syllabus}
+ */
+export const addCourse = async (courseData) => {
+  return new Promise(async (resolve, reject) => {
+    setTimeout(async () => {
+      try {
+        const courses = await storageManager.getCourseData();
+
+        const newCourse = {
+          id: `IF-${Date.now()}`,
+          ...courseData,
+          schedule: courseData.schedule || 'Jadwal akan ditentukan',
+          room: courseData.room || 'Ruang akan ditentukan',
+          capacity: courseData.capacity || 30,
+          registered: 0,
+          isEnrolled: false,
+          status: 'open',
+        };
+
+        courses.push(newCourse);
+        await storageManager.saveCourseData(courses);
+
+        resolve({
+          success: true,
+          message: `Successfully added course ${newCourse.name}`,
+          course: newCourse,
+        });
+      } catch (error) {
+        reject(error);
+      }
+    }, 500);
+  });
+};
+
+/**
+ * Update/Edit mata kuliah
+ * @param {string} courseId
+ * @param {object} updates
+ */
+export const updateCourse = async (courseId, updates) => {
+  return new Promise(async (resolve, reject) => {
+    setTimeout(async () => {
+      try {
+        const courses = await storageManager.getCourseData();
+        const courseIndex = courses.findIndex((c) => c.id === courseId);
+
+        if (courseIndex === -1) {
+          reject(new Error('Course not found'));
+          return;
+        }
+
+        courses[courseIndex] = { ...courses[courseIndex], ...updates };
+        await storageManager.saveCourseData(courses);
+
+        resolve({
+          success: true,
+          message: `Successfully updated course ${courses[courseIndex].name}`,
+          course: courses[courseIndex],
+        });
+      } catch (error) {
+        reject(error);
+      }
+    }, 500);
+  });
+};
+
+/**
+ * Hapus mata kuliah
+ * @param {string} courseId
+ */
+export const deleteCourse = async (courseId) => {
+  return new Promise(async (resolve, reject) => {
+    setTimeout(async () => {
+      try {
+        const courses = await storageManager.getCourseData();
+        const course = courses.find((c) => c.id === courseId);
+
+        if (!course) {
+          reject(new Error('Course not found'));
+          return;
+        }
+
+        if (course.isEnrolled) {
+          reject(new Error('Cannot delete enrolled course. Please unenroll first.'));
+          return;
+        }
+
+        const filteredCourses = courses.filter((c) => c.id !== courseId);
+        await storageManager.saveCourseData(filteredCourses);
+
+        resolve({
+          success: true,
+          message: `Successfully deleted course ${course.name}`,
+        });
+      } catch (error) {
+        reject(error);
+      }
+    }, 500);
+  });
+};
+
 export default {
   getAllCourses,
   getCourseById,
@@ -208,4 +311,7 @@ export default {
   unenrollCourse,
   searchCourses,
   getCoursesWithFilters,
+  addCourse,
+  updateCourse,
+  deleteCourse,
 };

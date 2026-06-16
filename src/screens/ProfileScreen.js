@@ -163,7 +163,7 @@ const ProfileScreen = () => {
         <View style={styles.header}>
           <View style={styles.avatarContainer}>
             <Image
-                source={require('../../assets/images/profil.jpg')}
+                source={require('../../assets/images/profil.png')}
                 style={{
                 width: 60,
                 zIndex: 1,

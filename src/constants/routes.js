@@ -5,7 +5,7 @@ export const ROUTES = {
   // Stack Navigator
   SPLASH: 'Splash',
   MAIN_TABS: 'MainTabs',
-  
+
   // Bottom Tab Navigator
   HOME: 'Home',
   COURSES: 'Courses',
@@ -14,8 +14,9 @@ export const ROUTES = {
 
   // Stack Screens (nested in tabs)
   COURSE_DETAIL: 'CourseDetail',
+  ADD_COURSE: 'AddCourse',
   ENROLL_CONFIRMATION: 'EnrollConfirmation',
-  
+
   // Drawer (optional)
   DRAWER: 'Drawer',
 };

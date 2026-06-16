@@ -10,6 +10,7 @@ import SplashScreen from '../screens/SplashScreen';
 import HomeScreen from '../screens/HomeScreen';
 import CourseListScreen from '../screens/CourseListScreen';
 import CourseDetailScreen from '../screens/CourseDetailScreen';
+import AddCourseScreen from '../screens/AddCourseScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
 import { colors } from '../styles/colors';
@@ -121,7 +122,7 @@ const RootNavigator = () => {
             }}
           />
 
-          {/* Course Detail Screen (nested stack di atas tabs) */}
+          {/* Course Detail Screen & Add Course Screen (nested stack di atas tabs) */}
           <Stack.Group screenOptions={{ presentation: 'modal' }}>
             <Stack.Screen
               name={ROUTES.COURSE_DETAIL}
@@ -129,6 +130,25 @@ const RootNavigator = () => {
               options={{
                 headerShown: true,
                 headerTitle: 'Detail Mata Kuliah',
+                headerStyle: {
+                  backgroundColor: colors.surfaceContainerLowest,
+                  borderBottomColor: colors.outlineVariant,
+                  borderBottomWidth: 1,
+                },
+                headerTitleStyle: {
+                  color: colors.onSurface,
+                  fontSize: 18,
+                  fontWeight: '600',
+                },
+                headerTintColor: colors.primary,
+              }}
+            />
+            <Stack.Screen
+              name={ROUTES.ADD_COURSE}
+              component={AddCourseScreen}
+              options={{
+                headerShown: true,
+                headerTitle: 'Tambah/Edit Mata Kuliah',
                 headerStyle: {
                   backgroundColor: colors.surfaceContainerLowest,
                   borderBottomColor: colors.outlineVariant,

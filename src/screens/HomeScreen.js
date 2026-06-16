@@ -101,7 +101,7 @@ const HomeScreen = ({ navigation }) => {
           </View>
          <View style={styles.studentAvatar}>
             <Image
-                source={require('../../assets/images/profil.jpg')}
+                source={require('../../assets/images/profil.png')}
                 style={{
                 width: 60,
                 zIndex: 1,
