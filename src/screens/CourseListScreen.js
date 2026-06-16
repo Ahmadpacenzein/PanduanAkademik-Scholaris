@@ -18,11 +18,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../styles/colors';
 import { typography } from '../styles/typography';
 import  courseService  from '../services/courseService';
-import storageManager from '../utils/storageManager';
 import CourseCard from '../components/CourseCard';
 import { ROUTES } from '../constants/routes';
+import { useAppTheme } from '../theme/ThemeContext';
 
 const CourseListScreen = ({ navigation }) => {
+  useAppTheme();
+  const styles = createStyles();
   const [courses, setCourses] = useState([]);
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +34,10 @@ const CourseListScreen = ({ navigation }) => {
 
   useEffect(() => {
     loadCourses();
-  }, []);
+
+    const unsubscribe = navigation.addListener('focus', loadCourses);
+    return unsubscribe;
+  }, [navigation]);
 
   useEffect(() => {
     filterCourses();
@@ -133,17 +138,6 @@ const CourseListScreen = ({ navigation }) => {
               Temukan dan daftar mata kuliah yang Anda inginkan
             </Text>
           </View>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => navigation.navigate(ROUTES.ADD_COURSE)}
-            activeOpacity={0.7}
-          >
-            <MaterialCommunityIcons
-              name="plus"
-              size={24}
-              color={colors.onPrimary}
-            />
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -211,11 +205,25 @@ const CourseListScreen = ({ navigation }) => {
           </Text>
         </View>
       )}
+
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate(ROUTES.ADD_COURSE)}
+        activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel="Tambah mata kuliah"
+      >
+        <MaterialCommunityIcons
+          name="plus"
+          size={28}
+          color={colors.onPrimary}
+        />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -236,13 +244,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
-  addButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  fab: {
+    position: 'absolute',
+    right: 24,
+    bottom: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.24,
+    shadowRadius: 8,
+    elevation: 6,
   },
   pageTitle: {
     color: colors.onSurface,
@@ -297,7 +316,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingBottom: 104,
   },
   separator: {
     height: 12,

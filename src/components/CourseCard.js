@@ -13,8 +13,11 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { colors } from '../styles/colors';
 import { typography } from '../styles/typography';
+import { useAppTheme } from '../theme/ThemeContext';
 
 const CourseCard = ({ course, onPress }) => {
+  useAppTheme();
+  const styles = createStyles();
   const animatedValue = new Animated.Value(1);
 
   const handlePressIn = () => {
@@ -152,7 +155,7 @@ const CourseCard = ({ course, onPress }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   cardContainer: {
     marginBottom: 8,
   },

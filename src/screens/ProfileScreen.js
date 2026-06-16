@@ -18,10 +18,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../styles/colors';
 import { typography } from '../styles/typography';
 import  studentService  from '../services/studentService';
-import storageManager from '../utils/storageManager';
 import * as intentService from '../services/intentService';
+import { ROUTES } from '../constants/routes';
+import storageManager from '../utils/storageManager';
+import { useAppTheme } from '../theme/ThemeContext';
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ navigation }) => {
+  useAppTheme();
+  const styles = createStyles();
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -67,6 +71,27 @@ const ProfileScreen = () => {
     if (student?.campus_location) {
       const { latitude, longitude, name } = student.campus_location;
       intentService.openGoogleMaps(latitude, longitude, name);
+    }
+  };
+
+  const handleOpenNotifications = async () => {
+    try {
+      const notifications = await storageManager.getNotifications();
+      const latestNotifications = notifications.slice(0, 5);
+
+      if (latestNotifications.length === 0) {
+        Alert.alert('Notifikasi', 'Belum ada notifikasi jadwal mata kuliah.');
+        return;
+      }
+
+      Alert.alert(
+        'Notifikasi',
+        latestNotifications
+          .map((item) => `${item.title}\n${item.message}`)
+          .join('\n\n')
+      );
+    } catch (error) {
+      Alert.alert('Notifikasi', 'Gagal memuat notifikasi.');
     }
   };
 
@@ -284,6 +309,7 @@ const ProfileScreen = () => {
         <View style={styles.section}>
           <TouchableOpacity
             style={styles.settingsItem}
+            onPress={handleOpenNotifications}
             activeOpacity={0.7}
           >
             <MaterialCommunityIcons
@@ -302,6 +328,7 @@ const ProfileScreen = () => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.settingsItem}
+            onPress={() => navigation.navigate(ROUTES.SETTINGS)}
             activeOpacity={0.7}
           >
             <MaterialCommunityIcons
@@ -345,7 +372,7 @@ const ProfileScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

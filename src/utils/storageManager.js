@@ -1,12 +1,32 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MOCK_STUDENT, MOCK_COURSES } from '../constants/mockData';
 
+const DEFAULT_SETTINGS = {
+  darkMode: false,
+  notifications: true,
+  language: 'id',
+};
+
 const STORAGE_KEYS = {
   STUDENT: '@scholaris_student',
   COURSES: '@scholaris_courses',
   ENROLLMENTS: '@scholaris_enrollments',
   SETTINGS: '@scholaris_settings',
+  NOTIFICATIONS: '@scholaris_notifications',
   LAST_SYNC: '@scholaris_last_sync',
+};
+
+const parseStoredJson = (value, fallback) => {
+  if (!value) {
+    return fallback;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    console.error('Error parsing stored JSON:', error);
+    return fallback;
+  }
 };
 
 const storageManager = {
@@ -15,6 +35,7 @@ const storageManager = {
     try {
       const existingCourses = await AsyncStorage.getItem(STORAGE_KEYS.COURSES);
       const existingStudent = await AsyncStorage.getItem(STORAGE_KEYS.STUDENT);
+      const existingSettings = await AsyncStorage.getItem(STORAGE_KEYS.SETTINGS);
 
       if (!existingCourses) {
         await AsyncStorage.setItem(
@@ -29,8 +50,50 @@ const storageManager = {
           JSON.stringify(MOCK_STUDENT)
         );
       }
+
+      if (!existingSettings) {
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.SETTINGS,
+          JSON.stringify(DEFAULT_SETTINGS)
+        );
+      }
     } catch (error) {
       console.error('Error initializing storage:', error);
+    }
+  },
+
+  // Get local notifications
+  getNotifications: async () => {
+    try {
+      const notifications = await AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
+      return parseStoredJson(notifications, []);
+    } catch (error) {
+      console.error('Error getting notifications:', error);
+      return [];
+    }
+  },
+
+  // Save a local notification
+  addNotification: async (notification) => {
+    try {
+      const notifications = await storageManager.getNotifications();
+      const newNotification = {
+        id: notification.id || `notif-${Date.now()}`,
+        title: notification.title,
+        message: notification.message,
+        date: notification.date || new Date().toISOString(),
+        read: notification.read ?? false,
+      };
+
+      const updatedNotifications = [newNotification, ...notifications];
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.NOTIFICATIONS,
+        JSON.stringify(updatedNotifications)
+      );
+      return newNotification;
+    } catch (error) {
+      console.error('Error adding notification:', error);
+      throw error;
     }
   },
 
@@ -38,10 +101,7 @@ const storageManager = {
   getStudentData: async () => {
     try {
       const studentData = await AsyncStorage.getItem(STORAGE_KEYS.STUDENT);
-      if (studentData) {
-        return JSON.parse(studentData);
-      }
-      return MOCK_STUDENT;
+      return parseStoredJson(studentData, MOCK_STUDENT);
     } catch (error) {
       console.error('Error getting student data:', error);
       return MOCK_STUDENT;
@@ -66,10 +126,7 @@ const storageManager = {
   getCourseData: async () => {
     try {
       const coursesData = await AsyncStorage.getItem(STORAGE_KEYS.COURSES);
-      if (coursesData) {
-        return JSON.parse(coursesData);
-      }
-      return MOCK_COURSES;
+      return parseStoredJson(coursesData, MOCK_COURSES);
     } catch (error) {
       console.error('Error getting course data:', error);
       return MOCK_COURSES;
@@ -133,17 +190,84 @@ const storageManager = {
     }
   },
 
+  // Add a new course
+  addCourse: async (courseData) => {
+    try {
+      const courses = await storageManager.getCourseData();
+      const newCourse = {
+        id: courseData.id || `IF-${Date.now()}`,
+        ...courseData,
+        registered: courseData.registered ?? 0,
+        isEnrolled: courseData.isEnrolled ?? false,
+        status: courseData.status || 'open',
+      };
+
+      const updatedCourses = [newCourse, ...courses];
+      await storageManager.saveCourseData(updatedCourses);
+      return newCourse;
+    } catch (error) {
+      console.error('Error adding course:', error);
+      throw error;
+    }
+  },
+
+  // Update an existing course
+  updateCourse: async (courseId, updates) => {
+    try {
+      const courses = await storageManager.getCourseData();
+      const courseIndex = courses.findIndex((course) => course.id === courseId);
+
+      if (courseIndex === -1) {
+        throw new Error('Course not found');
+      }
+
+      const updatedCourse = {
+        ...courses[courseIndex],
+        ...updates,
+        id: courses[courseIndex].id,
+      };
+      const updatedCourses = [...courses];
+      updatedCourses[courseIndex] = updatedCourse;
+      await storageManager.saveCourseData(updatedCourses);
+      return updatedCourse;
+    } catch (error) {
+      console.error('Error updating course:', error);
+      throw error;
+    }
+  },
+
+  // Delete a course
+  deleteCourse: async (courseId) => {
+    try {
+      const courses = await storageManager.getCourseData();
+      const course = courses.find((item) => item.id === courseId);
+
+      if (!course) {
+        throw new Error('Course not found');
+      }
+
+      const updatedCourses = courses.filter((item) => item.id !== courseId);
+      await storageManager.saveCourseData(updatedCourses);
+      return course;
+    } catch (error) {
+      console.error('Error deleting course:', error);
+      throw error;
+    }
+  },
+
   // Save app settings
   saveSettings: async (settings) => {
     try {
+      const currentSettings = await storageManager.getSettings();
+      const nextSettings = { ...currentSettings, ...settings };
       await AsyncStorage.setItem(
         STORAGE_KEYS.SETTINGS,
-        JSON.stringify(settings)
+        JSON.stringify(nextSettings)
       );
-      return true;
+      return nextSettings;
     } catch (error) {
       console.error('Error saving settings:', error);
-      return false;
+      throw error;
     }
   },
 
@@ -151,21 +275,13 @@ const storageManager = {
   getSettings: async () => {
     try {
       const settings = await AsyncStorage.getItem(STORAGE_KEYS.SETTINGS);
-      if (settings) {
-        return JSON.parse(settings);
-      }
       return {
-        darkMode: false,
-        notifications: true,
-        language: 'id',
+        ...DEFAULT_SETTINGS,
+        ...parseStoredJson(settings, DEFAULT_SETTINGS),
       };
     } catch (error) {
       console.error('Error getting settings:', error);
-      return {
-        darkMode: false,
-        notifications: true,
-        language: 'id',
-      };
+      return DEFAULT_SETTINGS;
     }
   },
 
@@ -177,6 +293,7 @@ const storageManager = {
         STORAGE_KEYS.COURSES,
         STORAGE_KEYS.ENROLLMENTS,
         STORAGE_KEYS.SETTINGS,
+        STORAGE_KEYS.NOTIFICATIONS,
         STORAGE_KEYS.LAST_SYNC,
       ]);
       return true;

@@ -27,12 +27,16 @@ export const getAllCourses = async () => {
  */
 export const getCourseById = async (courseId) => {
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const course = MOCK_COURSES.find((c) => c.id === courseId);
-      if (course) {
-        resolve(course);
-      } else {
-        reject(new Error('Course not found'));
+    setTimeout(async () => {
+      try {
+        const course = await storageManager.getCourseById(courseId);
+        if (course) {
+          resolve(course);
+        } else {
+          reject(new Error('Course not found'));
+        }
+      } catch (error) {
+        reject(error);
       }
     }, 300);
   });
@@ -62,9 +66,16 @@ export const getEnrolledCourses = async () => {
  */
 export const getAvailableCourses = async () => {
   return new Promise((resolve) => {
-    setTimeout(() => {
-      const available = MOCK_COURSES.filter((c) => !c.isEnrolled && c.status === 'open');
-      resolve(available);
+    setTimeout(async () => {
+      try {
+        const courses = await storageManager.getCourseData();
+        const available = courses.filter((c) => !c.isEnrolled && c.status === 'open');
+        resolve(available);
+      } catch (error) {
+        console.error('Error getting available courses:', error);
+        const available = MOCK_COURSES.filter((c) => !c.isEnrolled && c.status === 'open');
+        resolve(available);
+      }
     }, 300);
   });
 };
@@ -96,14 +107,17 @@ export const enrollCourse = async (courseId, studentId) => {
           return;
         }
 
-        // Update enrollment status and registered count
-        await storageManager.updateCourseEnrollment(courseId, true);
-        await storageManager.updateCourseRegistration(courseId, 1);
+        const updatedCourse = {
+          ...course,
+          isEnrolled: true,
+          registered: course.registered + 1,
+        };
+        await storageManager.updateCourse(courseId, updatedCourse);
 
         resolve({
           success: true,
           message: `Successfully enrolled in ${course.name}`,
-          course: { ...course, isEnrolled: true, registered: course.registered + 1 },
+          course: updatedCourse,
         });
       } catch (error) {
         reject(error);
@@ -134,14 +148,17 @@ export const unenrollCourse = async (courseId, studentId) => {
           return;
         }
 
-        // Update enrollment status and registered count
-        await storageManager.updateCourseEnrollment(courseId, false);
-        await storageManager.updateCourseRegistration(courseId, -1);
+        const updatedCourse = {
+          ...course,
+          isEnrolled: false,
+          registered: Math.max(0, course.registered - 1),
+        };
+        await storageManager.updateCourse(courseId, updatedCourse);
 
         resolve({
           success: true,
           message: `Successfully unenrolled from ${course.name}`,
-          course: { ...course, isEnrolled: false, registered: course.registered - 1 },
+          course: updatedCourse,
         });
       } catch (error) {
         reject(error);
@@ -156,14 +173,21 @@ export const unenrollCourse = async (courseId, studentId) => {
  */
 export const searchCourses = async (keyword) => {
   return new Promise((resolve) => {
-    setTimeout(() => {
-      const results = MOCK_COURSES.filter(
-        (course) =>
-          course.name.toLowerCase().includes(keyword.toLowerCase()) ||
-          course.code.toLowerCase().includes(keyword.toLowerCase()) ||
-          course.lecturer.toLowerCase().includes(keyword.toLowerCase())
-      );
-      resolve(results);
+    setTimeout(async () => {
+      try {
+        const courses = await storageManager.getCourseData();
+        const query = keyword.toLowerCase();
+        const results = courses.filter(
+          (course) =>
+            course.name.toLowerCase().includes(query) ||
+            course.code.toLowerCase().includes(query) ||
+            course.lecturer.toLowerCase().includes(query)
+        );
+        resolve(results);
+      } catch (error) {
+        console.error('Error searching courses:', error);
+        resolve([]);
+      }
     }, 300);
   });
 };
@@ -174,27 +198,33 @@ export const searchCourses = async (keyword) => {
  */
 export const getCoursesWithFilters = async (filters = {}) => {
   return new Promise((resolve) => {
-    setTimeout(() => {
-      let filtered = [...MOCK_COURSES];
+    setTimeout(async () => {
+      try {
+        const courses = await storageManager.getCourseData();
+        let filtered = [...courses];
 
-      // Filter by enrolled status
-      if (filters.enrolled !== undefined) {
-        filtered = filtered.filter((c) => c.isEnrolled === filters.enrolled);
+        // Filter by enrolled status
+        if (filters.enrolled !== undefined) {
+          filtered = filtered.filter((c) => c.isEnrolled === filters.enrolled);
+        }
+
+        // Filter by credits
+        if (filters.credits) {
+          filtered = filtered.filter((c) => c.credits === filters.credits);
+        }
+
+        // Filter by lecturer
+        if (filters.lecturer) {
+          filtered = filtered.filter((c) =>
+            c.lecturer.toLowerCase().includes(filters.lecturer.toLowerCase())
+          );
+        }
+
+        resolve(filtered);
+      } catch (error) {
+        console.error('Error filtering courses:', error);
+        resolve([]);
       }
-
-      // Filter by credits
-      if (filters.credits) {
-        filtered = filtered.filter((c) => c.credits === filters.credits);
-      }
-
-      // Filter by lecturer
-      if (filters.lecturer) {
-        filtered = filtered.filter((c) =>
-          c.lecturer.toLowerCase().includes(filters.lecturer.toLowerCase())
-        );
-      }
-
-      resolve(filtered);
     }, 300);
   });
 };
@@ -207,26 +237,32 @@ export const addCourse = async (courseData) => {
   return new Promise(async (resolve, reject) => {
     setTimeout(async () => {
       try {
-        const courses = await storageManager.getCourseData();
-
         const newCourse = {
           id: `IF-${Date.now()}`,
           ...courseData,
           schedule: courseData.schedule || 'Jadwal akan ditentukan',
           room: courseData.room || 'Ruang akan ditentukan',
           capacity: courseData.capacity || 30,
+          syllabus: courseData.syllabus?.length ? courseData.syllabus : ['Materi akan ditentukan'],
           registered: 0,
           isEnrolled: false,
           status: 'open',
         };
 
-        courses.push(newCourse);
-        await storageManager.saveCourseData(courses);
+        const savedCourse = await storageManager.addCourse(newCourse);
+        const settings = await storageManager.getSettings();
+
+        if (settings.notifications) {
+          await storageManager.addNotification({
+            title: 'Jadwal Mata Kuliah Baru',
+            message: `${savedCourse.name} ditambahkan dengan jadwal ${savedCourse.schedule}.`,
+          });
+        }
 
         resolve({
           success: true,
-          message: `Successfully added course ${newCourse.name}`,
-          course: newCourse,
+          message: `Successfully added course ${savedCourse.name}`,
+          course: savedCourse,
         });
       } catch (error) {
         reject(error);
@@ -244,21 +280,12 @@ export const updateCourse = async (courseId, updates) => {
   return new Promise(async (resolve, reject) => {
     setTimeout(async () => {
       try {
-        const courses = await storageManager.getCourseData();
-        const courseIndex = courses.findIndex((c) => c.id === courseId);
-
-        if (courseIndex === -1) {
-          reject(new Error('Course not found'));
-          return;
-        }
-
-        courses[courseIndex] = { ...courses[courseIndex], ...updates };
-        await storageManager.saveCourseData(courses);
+        const updatedCourse = await storageManager.updateCourse(courseId, updates);
 
         resolve({
           success: true,
-          message: `Successfully updated course ${courses[courseIndex].name}`,
-          course: courses[courseIndex],
+          message: `Successfully updated course ${updatedCourse.name}`,
+          course: updatedCourse,
         });
       } catch (error) {
         reject(error);
@@ -275,25 +302,12 @@ export const deleteCourse = async (courseId) => {
   return new Promise(async (resolve, reject) => {
     setTimeout(async () => {
       try {
-        const courses = await storageManager.getCourseData();
-        const course = courses.find((c) => c.id === courseId);
-
-        if (!course) {
-          reject(new Error('Course not found'));
-          return;
-        }
-
-        if (course.isEnrolled) {
-          reject(new Error('Cannot delete enrolled course. Please unenroll first.'));
-          return;
-        }
-
-        const filteredCourses = courses.filter((c) => c.id !== courseId);
-        await storageManager.saveCourseData(filteredCourses);
+        const deletedCourse = await storageManager.deleteCourse(courseId);
 
         resolve({
           success: true,
-          message: `Successfully deleted course ${course.name}`,
+          message: `Successfully deleted course ${deletedCourse.name}`,
+          course: deletedCourse,
         });
       } catch (error) {
         reject(error);

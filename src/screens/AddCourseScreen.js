@@ -16,8 +16,11 @@ import { colors } from '../styles/colors';
 import { typography } from '../styles/typography';
 import courseService from '../services/courseService';
 import { ROUTES } from '../constants/routes';
+import { useAppTheme } from '../theme/ThemeContext';
 
 const AddCourseScreen = ({ route, navigation }) => {
+  useAppTheme();
+  const styles = createStyles();
   const isEditMode = route.params?.course ? true : false;
   const existingCourse = route.params?.course || null;
 
@@ -29,6 +32,7 @@ const AddCourseScreen = ({ route, navigation }) => {
     lecturerEmail: existingCourse?.lecturerEmail || '',
     lecturerPhone: existingCourse?.lecturerPhone || '',
     description: existingCourse?.description || '',
+    syllabus: existingCourse?.syllabus?.join('\n') || '',
     schedule: existingCourse?.schedule || '',
     room: existingCourse?.room || '',
     capacity: existingCourse?.capacity?.toString() || '30',
@@ -65,6 +69,10 @@ const AddCourseScreen = ({ route, navigation }) => {
         ...formData,
         credits: parseInt(formData.credits),
         capacity: parseInt(formData.capacity),
+        syllabus: formData.syllabus
+          .split('\n')
+          .map((item) => item.trim())
+          .filter(Boolean),
       };
 
       if (isEditMode) {
@@ -172,6 +180,17 @@ const AddCourseScreen = ({ route, navigation }) => {
           </View>
 
           {renderInput('Deskripsi', 'description', 'Masukkan deskripsi mata kuliah...', true)}
+          {renderInput('Materi Pembelajaran', 'syllabus', 'Tulis satu materi per baris (Opsional)', true)}
+        </View>
+
+        {/* Schedule Info Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, typography.titleLarge]}>
+            Jadwal & Lokasi
+          </Text>
+
+          {renderInput('Jadwal', 'schedule', 'Contoh: Senin 13:00 - 14:40 (Opsional)')}
+          {renderInput('Ruangan', 'room', 'Contoh: 3C.2.08 Gedung C (Opsional)')}
         </View>
 
         {/* Lecturer Info Section */}
@@ -183,16 +202,6 @@ const AddCourseScreen = ({ route, navigation }) => {
           {renderInput('Nama Dosen', 'lecturer', 'Masukkan nama dosen')}
           {renderInput('Email Dosen', 'lecturerEmail', 'Masukkan email dosen', false, 'email-address')}
           {renderInput('Telepon Dosen', 'lecturerPhone', 'Masukkan nomor telepon', false, 'phone-pad')}
-        </View>
-
-        {/* Schedule Info Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, typography.titleLarge]}>
-            Jadwal & Lokasi
-          </Text>
-
-          {renderInput('Jadwal', 'schedule', 'Contoh: Senin 13:00 - 14:40 (Opsional)')}
-          {renderInput('Ruangan', 'room', 'Contoh: 3C.2.08 Gedung C (Opsional)')}
         </View>
 
         {/* Bottom Spacer */}
@@ -221,17 +230,9 @@ const AddCourseScreen = ({ route, navigation }) => {
           {isSubmitting ? (
             <ActivityIndicator size="small" color={colors.onPrimary} />
           ) : (
-            <>
-              <MaterialCommunityIcons
-                name={isEditMode ? 'pencil-check' : 'plus-check'}
-                size={20}
-                color={colors.onPrimary}
-                style={styles.buttonIcon}
-              />
-              <Text style={[styles.buttonText, typography.labelMedium]}>
-                {isEditMode ? 'Update' : 'Tambahkan'}
-              </Text>
-            </>
+            <Text style={[styles.buttonText, typography.labelMedium]}>
+              {isEditMode ? 'Update' : 'Tambahkan'}
+            </Text>
           )}
         </TouchableOpacity>
       </View>
@@ -239,7 +240,7 @@ const AddCourseScreen = ({ route, navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -252,8 +253,8 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 32,
-    paddingVertical: 16,
+    marginBottom: 20,
+    paddingVertical: 8,
   },
   headerIcon: {
     marginBottom: 12,
@@ -267,14 +268,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   section: {
-    marginBottom: 32,
+    marginBottom: 20,
   },
   sectionTitle: {
     color: colors.onSurface,
     marginBottom: 16,
   },
   inputContainer: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   label: {
     color: colors.onSurfaceVariant,
@@ -308,7 +309,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bottomSpacer: {
-    height: 20,
+    height: 96,
   },
   footer: {
     position: 'absolute',
@@ -339,9 +340,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
     borderColor: colors.outlineVariant,
-  },
-  buttonIcon: {
-    marginRight: 8,
   },
   buttonText: {
     color: colors.onPrimary,

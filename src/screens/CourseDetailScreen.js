@@ -21,35 +21,43 @@ import  studentService  from '../services/studentService';
 import storageManager from '../utils/storageManager';
 import * as intentService from '../services/intentService';
 import { ROUTES } from '../constants/routes';
+import { useAppTheme } from '../theme/ThemeContext';
 
 const CourseDetailScreen = ({ route, navigation }) => {
-  const { course } = route.params;
+  useAppTheme();
+  const styles = createStyles();
+  const initialCourse = route.params.course;
+  const [course, setCourse] = useState(initialCourse);
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [isUnenrolling, setIsUnenrolling] = useState(false);
-  const [enrollmentStatus, setEnrollmentStatus] = useState(course.isEnrolled);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [enrollmentStatus, setEnrollmentStatus] = useState(initialCourse.isEnrolled);
 
   React.useEffect(() => {
-    const syncEnrollmentStatus = async () => {
+    const syncCourse = async () => {
       try {
-        const updatedCourse = await storageManager.getCourseById(course.id);
+        const updatedCourse = await storageManager.getCourseById(initialCourse.id);
         if (updatedCourse) {
+          setCourse(updatedCourse);
           setEnrollmentStatus(updatedCourse.isEnrolled);
         }
       } catch (error) {
-        console.error('Error syncing enrollment status:', error);
+        console.error('Error syncing course:', error);
       }
     };
 
-    syncEnrollmentStatus();
-  }, [course.id]);
+    syncCourse();
+    const unsubscribe = navigation.addListener('focus', syncCourse);
+    return unsubscribe;
+  }, [initialCourse.id, navigation]);
 
   const handleEnroll = async () => {
     setIsEnrolling(true);
     try {
       const studentId = await studentService.getStudentId();
       const result = await courseService.enrollCourse(course.id, studentId);
+      setCourse(result.course);
       setEnrollmentStatus(true);
-      await storageManager.updateCourseEnrollment(course.id, true);
       Alert.alert('Berhasil', result.message, [
   {
     text: 'Kembali ke Beranda',
@@ -90,13 +98,53 @@ const CourseDetailScreen = ({ route, navigation }) => {
             try {
               const studentId = await studentService.getStudentId();
               const result = await courseService.unenrollCourse(course.id, studentId);
+              setCourse(result.course);
               setEnrollmentStatus(false);
-              await storageManager.updateCourseEnrollment(course.id, false);
               Alert.alert('Berhasil', result.message);
             } catch (error) {
               Alert.alert('Gagal', error.message);
             } finally {
               setIsUnenrolling(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleEditCourse = () => {
+    navigation.navigate(ROUTES.ADD_COURSE, { course });
+  };
+
+  const handleDeleteCourse = () => {
+    Alert.alert(
+      'Hapus Mata Kuliah',
+      `Apakah Anda yakin ingin menghapus ${course.name}?`,
+      [
+        {
+          text: 'Batal',
+          style: 'cancel',
+        },
+        {
+          text: 'Hapus',
+          style: 'destructive',
+          onPress: async () => {
+            setIsDeleting(true);
+            try {
+              const result = await courseService.deleteCourse(course.id);
+              Alert.alert('Berhasil', result.message, [
+                {
+                  text: 'OK',
+                  onPress: () =>
+                    navigation.navigate(ROUTES.MAIN_TABS, {
+                      screen: ROUTES.COURSES,
+                    }),
+                },
+              ]);
+            } catch (error) {
+              Alert.alert('Gagal', error.message);
+            } finally {
+              setIsDeleting(false);
             }
           },
         },
@@ -220,6 +268,15 @@ const handleEmailLecturer = () => {
               </Text>
             </View>
           )}
+          <View style={styles.manageButtonsRow}>
+            {renderActionButton('pencil', 'Edit', handleEditCourse, 'secondary')}
+            {renderActionButton(
+              'delete',
+              isDeleting ? 'Menghapus...' : 'Hapus',
+              handleDeleteCourse,
+              'danger'
+            )}
+          </View>
         </View>
 
         {/* Course Description */}
@@ -281,7 +338,7 @@ const handleEmailLecturer = () => {
           <Text style={[styles.sectionTitle, typography.titleLarge]}>
             Materi Pembelajaran
           </Text>
-          {course.syllabus.map((item, index) => (
+          {(course.syllabus || []).map((item, index) => (
             <View key={index} style={styles.syllabusItem}>
               <View style={styles.syllabusNumber}>
                 <Text style={[styles.syllabusNumberText, typography.labelSmall]}>
@@ -428,7 +485,7 @@ const handleEmailLecturer = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -472,6 +529,12 @@ const styles = StyleSheet.create({
   enrolledText: {
     color: colors.onPrimaryFixed,
     marginLeft: 4,
+  },
+  manageButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+    width: '100%',
   },
   section: {
     marginBottom: 24,

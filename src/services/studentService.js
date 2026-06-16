@@ -49,8 +49,14 @@ export const updateStudentProfile = async (updates) => {
  */
 export const getStudentId = async () => {
   return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(MOCK_STUDENT.id);
+    setTimeout(async () => {
+      try {
+        const student = await storageManager.getStudentData();
+        resolve(student.id);
+      } catch (error) {
+        console.error('Error getting student ID:', error);
+        resolve(MOCK_STUDENT.id);
+      }
     }, 100);
   });
 };
@@ -60,11 +66,12 @@ export const getStudentId = async () => {
  */
 export const getStudentContact = async () => {
   return new Promise((resolve) => {
-    setTimeout(() => {
+    setTimeout(async () => {
+      const student = await storageManager.getStudentData();
       resolve({
-        email: MOCK_STUDENT.email,
-        phone: MOCK_STUDENT.phone,
-        name: MOCK_STUDENT.name,
+        email: student.email,
+        phone: student.phone,
+        name: student.name,
       });
     }, 100);
   });
@@ -75,14 +82,15 @@ export const getStudentContact = async () => {
  */
 export const getStudentAcademic = async () => {
   return new Promise((resolve) => {
-    setTimeout(() => {
+    setTimeout(async () => {
+      const student = await storageManager.getStudentData();
       resolve({
-        id: MOCK_STUDENT.id,
-        major: MOCK_STUDENT.major,
-        semester: MOCK_STUDENT.semester,
-        gpa: MOCK_STUDENT.gpa,
-        faculty: MOCK_STUDENT.faculty,
-        university: MOCK_STUDENT.university,
+        id: student.id,
+        major: student.major,
+        semester: student.semester,
+        gpa: student.gpa,
+        faculty: student.faculty,
+        university: student.university,
       });
     }, 100);
   });
@@ -93,8 +101,9 @@ export const getStudentAcademic = async () => {
  */
 export const getStudentCampusLocation = async () => {
   return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(MOCK_STUDENT.campus_location);
+    setTimeout(async () => {
+      const student = await storageManager.getStudentData();
+      resolve(student.campus_location);
     }, 100);
   });
 };

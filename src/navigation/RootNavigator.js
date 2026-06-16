@@ -12,16 +12,20 @@ import CourseListScreen from '../screens/CourseListScreen';
 import CourseDetailScreen from '../screens/CourseDetailScreen';
 import AddCourseScreen from '../screens/AddCourseScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 
 import { colors } from '../styles/colors';
 import { ROUTES } from '../constants/routes';
 import storageManager from '../utils/storageManager';
+import { useAppTheme } from '../theme/ThemeContext';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 // Bottom Tab Navigator
 const BottomTabNavigator = () => {
+  useAppTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -80,6 +84,7 @@ const BottomTabNavigator = () => {
 
 // Root Navigator dengan Splash
 const RootNavigator = () => {
+  useAppTheme();
   const [isSplashVisible, setIsSplashVisible] = useState(true);
 
   useEffect(() => {
@@ -149,6 +154,25 @@ const RootNavigator = () => {
               options={{
                 headerShown: true,
                 headerTitle: 'Tambah/Edit Mata Kuliah',
+                headerStyle: {
+                  backgroundColor: colors.surfaceContainerLowest,
+                  borderBottomColor: colors.outlineVariant,
+                  borderBottomWidth: 1,
+                },
+                headerTitleStyle: {
+                  color: colors.onSurface,
+                  fontSize: 18,
+                  fontWeight: '600',
+                },
+                headerTintColor: colors.primary,
+              }}
+            />
+            <Stack.Screen
+              name={ROUTES.SETTINGS}
+              component={SettingsScreen}
+              options={{
+                headerShown: true,
+                headerTitle: 'Pengaturan',
                 headerStyle: {
                   backgroundColor: colors.surfaceContainerLowest,
                   borderBottomColor: colors.outlineVariant,

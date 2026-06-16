@@ -1,7 +1,7 @@
 // src/styles/colors.js
 // Ivory Academic Color System
 
-export const colors = {
+export const lightColors = {
   // Surface Colors
   surface: '#f9f9ff',
   surfaceDim: '#d8d9e2',
@@ -24,6 +24,8 @@ export const colors = {
   onPrimary: '#ffffff',
   primaryContainer: '#0066cc',
   onPrimaryContainer: '#dfe8ff',
+  primaryFixed: '#d8e2ff',
+  onPrimaryFixed: '#001a41',
   inversePrimary: '#aac7ff',
 
   // Secondary Colors
@@ -65,6 +67,69 @@ export const colors = {
 
   // Additional
   disabledText: 'rgba(25, 28, 34, 0.38)',
+};
+
+export const darkColors = {
+  surface: '#111318',
+  surfaceDim: '#111318',
+  surfaceBright: '#37393f',
+  surfaceContainerLowest: '#0c0e13',
+  surfaceContainerLow: '#191c22',
+  surfaceContainer: '#1d2027',
+  surfaceContainerHigh: '#282a31',
+  surfaceContainerHighest: '#33353d',
+
+  onSurface: '#e2e2eb',
+  onSurfaceVariant: '#c3c6d0',
+  inverseSurface: '#e2e2eb',
+  inverseOnSurface: '#2f3037',
+
+  primary: '#aac7ff',
+  primaryDark: '#7dadf7',
+  onPrimary: '#00315f',
+  primaryContainer: '#00477f',
+  onPrimaryContainer: '#d8e2ff',
+  primaryFixed: '#d8e2ff',
+  onPrimaryFixed: '#001a41',
+  inversePrimary: '#004e9f',
+
+  secondary: '#c7c6ce',
+  onSecondary: '#303036',
+  secondaryContainer: '#46464d',
+  onSecondaryContainer: '#e4e2eb',
+
+  tertiary: '#ffb78f',
+  onTertiary: '#502400',
+  tertiaryContainer: '#733500',
+  onTertiaryContainer: '#ffdcc8',
+
+  error: '#ffb4ab',
+  onError: '#690005',
+  errorContainer: '#93000a',
+  onErrorContainer: '#ffdad6',
+
+  outline: '#8c909b',
+  outlineVariant: '#424752',
+
+  background: '#111318',
+  onBackground: '#e2e2eb',
+  surfaceVariant: '#424752',
+
+  success: '#88d18a',
+  warning: '#ffb95c',
+  info: '#aac7ff',
+
+  transparent: 'transparent',
+  black: '#000000',
+  white: '#ffffff',
+
+  disabledText: 'rgba(226, 226, 235, 0.38)',
+};
+
+export const colors = { ...lightColors };
+
+export const applyThemeColors = (darkMode = false) => {
+  Object.assign(colors, darkMode ? darkColors : lightColors);
 };
 
 // Preset combinations for different states

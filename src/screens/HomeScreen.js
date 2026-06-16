@@ -25,10 +25,13 @@ import storageManager from '../utils/storageManager';
 import CourseCard from '../components/CourseCard';
 import { MOCK_QUICK_MENU } from '../constants/mockData';
 import { ROUTES } from '../constants/routes';
+import { useAppTheme } from '../theme/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
+  useAppTheme();
+  const styles = createStyles();
   const [student, setStudent] = useState(null);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -267,7 +270,7 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

@@ -14,10 +14,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '../styles/colors';
 import { typography } from '../styles/typography';
+import { useAppTheme } from '../theme/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
 const SplashScreen = ({ navigation }) => {
+  useAppTheme();
+  const styles = createStyles();
   const scaleAnim = new Animated.Value(0.8);
   const opacityAnim = new Animated.Value(0);
 
@@ -109,7 +112,7 @@ const SplashScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
