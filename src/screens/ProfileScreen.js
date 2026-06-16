@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../styles/colors';
 import { typography } from '../styles/typography';
 import  studentService  from '../services/studentService';
+import storageManager from '../utils/storageManager';
 import * as intentService from '../services/intentService';
 
 const ProfileScreen = () => {

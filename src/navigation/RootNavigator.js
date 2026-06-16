@@ -14,6 +14,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 
 import { colors } from '../styles/colors';
 import { ROUTES } from '../constants/routes';
+import storageManager from '../utils/storageManager';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -81,11 +82,16 @@ const RootNavigator = () => {
   const [isSplashVisible, setIsSplashVisible] = useState(true);
 
   useEffect(() => {
-    const splashTimer = setTimeout(() => {
-      setIsSplashVisible(false);
-    }, 2000); // 2 detik splash screen
+    const initApp = async () => {
+      await storageManager.initializeStorage();
+      const splashTimer = setTimeout(() => {
+        setIsSplashVisible(false);
+      }, 2000);
 
-    return () => clearTimeout(splashTimer);
+      return () => clearTimeout(splashTimer);
+    };
+
+    initApp();
   }, []);
 
   return (

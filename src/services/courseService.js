@@ -2,15 +2,21 @@
 // Service untuk mengakses data mata kuliah
 
 import { MOCK_COURSES } from '../constants/mockData';
+import storageManager from '../utils/storageManager';
 
 /**
  * Get semua mata kuliah
  */
 export const getAllCourses = async () => {
-  // Simulate API delay
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(MOCK_COURSES);
+  return new Promise(async (resolve) => {
+    setTimeout(async () => {
+      try {
+        const courses = await storageManager.getCourseData();
+        resolve(courses);
+      } catch (error) {
+        console.error('Error getting courses:', error);
+        resolve(MOCK_COURSES);
+      }
     }, 500);
   });
 };
@@ -36,10 +42,17 @@ export const getCourseById = async (courseId) => {
  * Get mata kuliah yang sudah diambil (enrolled)
  */
 export const getEnrolledCourses = async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const enrolled = MOCK_COURSES.filter((c) => c.isEnrolled);
-      resolve(enrolled);
+  return new Promise(async (resolve) => {
+    setTimeout(async () => {
+      try {
+        const courses = await storageManager.getCourseData();
+        const enrolled = courses.filter((c) => c.isEnrolled);
+        resolve(enrolled);
+      } catch (error) {
+        console.error('Error getting enrolled courses:', error);
+        const enrolled = MOCK_COURSES.filter((c) => c.isEnrolled);
+        resolve(enrolled);
+      }
     }, 300);
   });
 };
@@ -62,34 +75,39 @@ export const getAvailableCourses = async () => {
  * @param {string} studentId
  */
 export const enrollCourse = async (courseId, studentId) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const course = MOCK_COURSES.find((c) => c.id === courseId);
-      
-      if (!course) {
-        reject(new Error('Course not found'));
-        return;
+  return new Promise(async (resolve, reject) => {
+    setTimeout(async () => {
+      try {
+        const courses = await storageManager.getCourseData();
+        const course = courses.find((c) => c.id === courseId);
+
+        if (!course) {
+          reject(new Error('Course not found'));
+          return;
+        }
+
+        if (course.registered >= course.capacity) {
+          reject(new Error('Course is full'));
+          return;
+        }
+
+        if (course.isEnrolled) {
+          reject(new Error('Already enrolled in this course'));
+          return;
+        }
+
+        // Update enrollment status and registered count
+        await storageManager.updateCourseEnrollment(courseId, true);
+        await storageManager.updateCourseRegistration(courseId, 1);
+
+        resolve({
+          success: true,
+          message: `Successfully enrolled in ${course.name}`,
+          course: { ...course, isEnrolled: true, registered: course.registered + 1 },
+        });
+      } catch (error) {
+        reject(error);
       }
-
-      if (course.registered >= course.capacity) {
-        reject(new Error('Course is full'));
-        return;
-      }
-
-      if (course.isEnrolled) {
-        reject(new Error('Already enrolled in this course'));
-        return;
-      }
-
-      // Simulate enrollment
-      course.isEnrolled = true;
-      course.registered += 1;
-
-      resolve({
-        success: true,
-        message: `Successfully enrolled in ${course.name}`,
-        course: course,
-      });
     }, 800);
   });
 };
@@ -100,29 +118,34 @@ export const enrollCourse = async (courseId, studentId) => {
  * @param {string} studentId
  */
 export const unenrollCourse = async (courseId, studentId) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const course = MOCK_COURSES.find((c) => c.id === courseId);
-      
-      if (!course) {
-        reject(new Error('Course not found'));
-        return;
+  return new Promise(async (resolve, reject) => {
+    setTimeout(async () => {
+      try {
+        const courses = await storageManager.getCourseData();
+        const course = courses.find((c) => c.id === courseId);
+
+        if (!course) {
+          reject(new Error('Course not found'));
+          return;
+        }
+
+        if (!course.isEnrolled) {
+          reject(new Error('Not enrolled in this course'));
+          return;
+        }
+
+        // Update enrollment status and registered count
+        await storageManager.updateCourseEnrollment(courseId, false);
+        await storageManager.updateCourseRegistration(courseId, -1);
+
+        resolve({
+          success: true,
+          message: `Successfully unenrolled from ${course.name}`,
+          course: { ...course, isEnrolled: false, registered: course.registered - 1 },
+        });
+      } catch (error) {
+        reject(error);
       }
-
-      if (!course.isEnrolled) {
-        reject(new Error('Not enrolled in this course'));
-        return;
-      }
-
-      // Simulate unenrollment
-      course.isEnrolled = false;
-      course.registered -= 1;
-
-      resolve({
-        success: true,
-        message: `Successfully unenrolled from ${course.name}`,
-        course: course,
-      });
     }, 800);
   });
 };

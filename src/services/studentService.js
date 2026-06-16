@@ -2,14 +2,21 @@
 // Service untuk mengakses data mahasiswa
 
 import { MOCK_STUDENT } from '../constants/mockData';
+import storageManager from '../utils/storageManager';
 
 /**
  * Get data mahasiswa
  */
 export const getStudentProfile = async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(MOCK_STUDENT);
+  return new Promise(async (resolve) => {
+    setTimeout(async () => {
+      try {
+        const student = await storageManager.getStudentData();
+        resolve(student);
+      } catch (error) {
+        console.error('Error getting student profile:', error);
+        resolve(MOCK_STUDENT);
+      }
     }, 300);
   });
 };
@@ -19,10 +26,12 @@ export const getStudentProfile = async () => {
  * @param {object} updates
  */
 export const updateStudentProfile = async (updates) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
+  return new Promise(async (resolve, reject) => {
+    setTimeout(async () => {
       try {
-        const updated = { ...MOCK_STUDENT, ...updates };
+        const currentStudent = await storageManager.getStudentData();
+        const updated = { ...currentStudent, ...updates };
+        await storageManager.saveStudentData(updated);
         resolve({
           success: true,
           message: 'Profile updated successfully',

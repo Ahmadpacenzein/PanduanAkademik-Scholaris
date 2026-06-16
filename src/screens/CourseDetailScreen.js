@@ -18,6 +18,7 @@ import { colors } from '../styles/colors';
 import { typography } from '../styles/typography';
 import  courseService  from '../services/courseService';
 import  studentService  from '../services/studentService';
+import storageManager from '../utils/storageManager';
 import * as intentService from '../services/intentService';
 import { ROUTES } from '../constants/routes';
 
@@ -27,12 +28,28 @@ const CourseDetailScreen = ({ route, navigation }) => {
   const [isUnenrolling, setIsUnenrolling] = useState(false);
   const [enrollmentStatus, setEnrollmentStatus] = useState(course.isEnrolled);
 
+  React.useEffect(() => {
+    const syncEnrollmentStatus = async () => {
+      try {
+        const updatedCourse = await storageManager.getCourseById(course.id);
+        if (updatedCourse) {
+          setEnrollmentStatus(updatedCourse.isEnrolled);
+        }
+      } catch (error) {
+        console.error('Error syncing enrollment status:', error);
+      }
+    };
+
+    syncEnrollmentStatus();
+  }, [course.id]);
+
   const handleEnroll = async () => {
     setIsEnrolling(true);
     try {
       const studentId = await studentService.getStudentId();
       const result = await courseService.enrollCourse(course.id, studentId);
       setEnrollmentStatus(true);
+      await storageManager.updateCourseEnrollment(course.id, true);
       Alert.alert('Berhasil', result.message, [
   {
     text: 'Kembali ke Beranda',
@@ -74,6 +91,7 @@ const CourseDetailScreen = ({ route, navigation }) => {
               const studentId = await studentService.getStudentId();
               const result = await courseService.unenrollCourse(course.id, studentId);
               setEnrollmentStatus(false);
+              await storageManager.updateCourseEnrollment(course.id, false);
               Alert.alert('Berhasil', result.message);
             } catch (error) {
               Alert.alert('Gagal', error.message);

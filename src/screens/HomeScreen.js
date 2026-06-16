@@ -21,6 +21,7 @@ import { colors } from '../styles/colors';
 import { typography } from '../styles/typography';
 import  studentService  from '../services/studentService';
 import  courseService  from '../services/courseService';
+import storageManager from '../utils/storageManager';
 import CourseCard from '../components/CourseCard';
 import { MOCK_QUICK_MENU } from '../constants/mockData';
 import { ROUTES } from '../constants/routes';

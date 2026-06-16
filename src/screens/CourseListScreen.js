@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../styles/colors';
 import { typography } from '../styles/typography';
 import  courseService  from '../services/courseService';
+import storageManager from '../utils/storageManager';
 import CourseCard from '../components/CourseCard';
 import { ROUTES } from '../constants/routes';
 
