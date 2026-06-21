@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import RootNavigator from './src/navigation/RootNavigator';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useAppTheme } from './src/theme/ThemeContext';
+import { registerBackgroundTask } from './src/background/backgroundTask';
+import { registerNotification } from './src/services/notificationService';
+import { mergeServerAndLocal } from './src/services/apiService';
+import { NetworkProvider } from './src/context/NetworkContext';
 
 const ThemedNavigation = () => {
   const { colors, darkMode } = useAppTheme();
@@ -30,12 +34,29 @@ const ThemedNavigation = () => {
 };
 
 export default function App() {
+  useEffect(() => {
+    const initApp = async () => {
+      try {
+        await registerNotification();
+        await registerBackgroundTask();
+        console.log('[App Open] Starting Auto Sync...');
+        await mergeServerAndLocal();
+        console.log('[App Open] Auto Sync completed successfully');
+      } catch (error) {
+        console.error('[App Open] Initialization/Sync failed:', error);
+      }
+    };
+    initApp();
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <ThemeProvider>
-          <ThemedNavigation />
-        </ThemeProvider>
+        <NetworkProvider>
+          <ThemeProvider>
+            <ThemedNavigation />
+          </ThemeProvider>
+        </NetworkProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

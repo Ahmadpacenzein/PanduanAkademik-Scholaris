@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   TextInput,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../styles/colors';
 import { typography } from '../styles/typography';
 import  courseService  from '../services/courseService';
+import apiService from '../services/apiService';
 import CourseCard from '../components/CourseCard';
 import { ROUTES } from '../constants/routes';
 import { useAppTheme } from '../theme/ThemeContext';
@@ -29,6 +31,7 @@ const CourseListScreen = ({ navigation }) => {
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all'); // all, enrolled, available
 
@@ -58,9 +61,27 @@ const CourseListScreen = ({ navigation }) => {
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      await loadCourses();
+      const merged = await apiService.mergeServerAndLocal();
+      setCourses(merged);
+    } catch (error) {
+      console.error('Refresh sync failed:', error);
+      Alert.alert('Koneksi Gagal', 'Gagal memuat ulang data dari server. Menampilkan data lokal.');
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const merged = await apiService.mergeServerAndLocal();
+      setCourses(merged);
+      Alert.alert('Sukses', 'Sinkronisasi selesai! Data berhasil diperbarui dari server.');
+    } catch (error) {
+      console.error('Sync failed:', error);
+      Alert.alert('Koneksi Gagal', 'Gagal sinkronisasi dengan server. Menggunakan data lokal.');
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -130,7 +151,7 @@ const CourseListScreen = ({ navigation }) => {
       {/* Header */}
       <View style={styles.headerSection}>
         <View style={styles.headerContent}>
-          <View>
+          <View style={{ flex: 1, marginRight: 16 }}>
             <Text style={[styles.pageTitle, typography.headlineMedium]}>
               Mata Kuliah
             </Text>
@@ -138,6 +159,22 @@ const CourseListScreen = ({ navigation }) => {
               Temukan dan daftar mata kuliah yang Anda inginkan
             </Text>
           </View>
+          <TouchableOpacity
+            style={styles.syncButton}
+            onPress={handleSync}
+            disabled={syncing}
+            activeOpacity={0.7}
+          >
+            {syncing ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <MaterialCommunityIcons
+                name="sync"
+                size={24}
+                color={colors.primary}
+              />
+            )}
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -242,7 +279,16 @@ const createStyles = () => StyleSheet.create({
   headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+  },
+  syncButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: colors.surfaceContainer,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   fab: {
     position: 'absolute',

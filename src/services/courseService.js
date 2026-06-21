@@ -3,6 +3,7 @@
 
 import { MOCK_COURSES } from '../constants/mockData';
 import storageManager from '../utils/storageManager';
+import apiService from './apiService';
 
 /**
  * Get semua mata kuliah
@@ -248,6 +249,20 @@ export const addCourse = async (courseData) => {
           isEnrolled: false,
           status: 'open',
         };
+
+        // Attempt to POST to server (retry once on failure, fallback to local storage)
+        try {
+          let postResponse;
+          try {
+            postResponse = await apiService.postCourseToServer(newCourse);
+          } catch (postError) {
+            console.warn('First POST attempt failed, retrying once...', postError);
+            postResponse = await apiService.postCourseToServer(newCourse);
+          }
+          console.log('Course posted to server successfully:', postResponse);
+        } catch (apiError) {
+          console.error('Failed to post course to server, using local fallback:', apiError);
+        }
 
         const savedCourse = await storageManager.addCourse(newCourse);
         const settings = await storageManager.getSettings();

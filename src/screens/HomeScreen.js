@@ -26,12 +26,14 @@ import CourseCard from '../components/CourseCard';
 import { MOCK_QUICK_MENU } from '../constants/mockData';
 import { ROUTES } from '../constants/routes';
 import { useAppTheme } from '../theme/ThemeContext';
+import { useNetwork } from '../context/NetworkContext';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
   useAppTheme();
   const styles = createStyles();
+  const { isConnected } = useNetwork();
   const [student, setStudent] = useState(null);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -101,6 +103,11 @@ const HomeScreen = ({ navigation }) => {
             <Text style={[styles.studentName, typography.headlineMedium]}>
               {student?.name || 'Mahasiswa'}
             </Text>
+            <View style={styles.statusBadge}>
+              <Text style={styles.statusText}>
+                {isConnected ? '🟢 Online' : '🔴 Offline'}
+              </Text>
+            </View>
           </View>
          <View style={styles.studentAvatar}>
             <Image
@@ -435,6 +442,16 @@ const createStyles = () => StyleSheet.create({
   },
   announcementText: {
     color: colors.onSurfaceVariant,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  statusText: {
+    color: colors.onSurfaceVariant,
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
 
