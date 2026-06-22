@@ -5,6 +5,7 @@ import RootNavigator from './src/navigation/RootNavigator';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useAppTheme } from './src/theme/ThemeContext';
 import { registerBackgroundTask } from './src/background/backgroundTask';
+import * as Notifications from 'expo-notifications';
 import { registerNotification } from './src/services/notificationService';
 import { mergeServerAndLocal } from './src/services/apiService';
 import { NetworkProvider } from './src/context/NetworkContext';
@@ -37,7 +38,8 @@ export default function App() {
   useEffect(() => {
     const initApp = async () => {
       try {
-        await registerNotification();
+        const pushRegistration = await registerNotification();
+        console.log('[Notifications] Registration status:', pushRegistration);
         await registerBackgroundTask();
         console.log('[App Open] Starting Auto Sync...');
         await mergeServerAndLocal();
@@ -47,6 +49,23 @@ export default function App() {
       }
     };
     initApp();
+
+    const receivedSubscription =
+      Notifications.addNotificationReceivedListener((notification) => {
+        console.log('[Notifications] Received:', notification.request.content);
+      });
+    const responseSubscription =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log(
+          '[Notifications] Opened:',
+          response.notification.request.content.data
+        );
+      });
+
+    return () => {
+      receivedSubscription.remove();
+      responseSubscription.remove();
+    };
   }, []);
 
   return (

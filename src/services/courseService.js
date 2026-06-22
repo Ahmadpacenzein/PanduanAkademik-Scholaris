@@ -4,6 +4,7 @@
 import { MOCK_COURSES } from '../constants/mockData';
 import storageManager from '../utils/storageManager';
 import apiService from './apiService';
+import notificationService from './notificationService';
 
 /**
  * Get semua mata kuliah
@@ -114,6 +115,15 @@ export const enrollCourse = async (courseId, studentId) => {
           registered: course.registered + 1,
         };
         await storageManager.updateCourse(courseId, updatedCourse);
+
+        const settings = await storageManager.getSettings();
+        if (settings.notifications) {
+          await storageManager.addNotification({
+            title: 'Pendaftaran Mata Kuliah Berhasil',
+            message: `${updatedCourse.name} (${updatedCourse.code}) berhasil diambil.`,
+          });
+          await notificationService.sendEnrollmentNotification(updatedCourse);
+        }
 
         resolve({
           success: true,
@@ -272,6 +282,7 @@ export const addCourse = async (courseData) => {
             title: 'Jadwal Mata Kuliah Baru',
             message: `${savedCourse.name} ditambahkan dengan jadwal ${savedCourse.schedule}.`,
           });
+          await notificationService.sendCourseNotification(savedCourse);
         }
 
         resolve({

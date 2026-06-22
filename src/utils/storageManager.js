@@ -13,6 +13,7 @@ const STORAGE_KEYS = {
   ENROLLMENTS: '@scholaris_enrollments',
   SETTINGS: '@scholaris_settings',
   NOTIFICATIONS: '@scholaris_notifications',
+  EXPO_PUSH_TOKEN: '@scholaris_expo_push_token',
   LAST_SYNC: '@scholaris_last_sync',
 };
 
@@ -94,6 +95,29 @@ const storageManager = {
     } catch (error) {
       console.error('Error adding notification:', error);
       throw error;
+    }
+  },
+
+  getExpoPushToken: async () => {
+    try {
+      return await AsyncStorage.getItem(STORAGE_KEYS.EXPO_PUSH_TOKEN);
+    } catch (error) {
+      console.error('Error getting Expo push token:', error);
+      return null;
+    }
+  },
+
+  saveExpoPushToken: async (token) => {
+    try {
+      if (token) {
+        await AsyncStorage.setItem(STORAGE_KEYS.EXPO_PUSH_TOKEN, token);
+      } else {
+        await AsyncStorage.removeItem(STORAGE_KEYS.EXPO_PUSH_TOKEN);
+      }
+      return true;
+    } catch (error) {
+      console.error('Error saving Expo push token:', error);
+      return false;
     }
   },
 
@@ -294,6 +318,7 @@ const storageManager = {
         STORAGE_KEYS.ENROLLMENTS,
         STORAGE_KEYS.SETTINGS,
         STORAGE_KEYS.NOTIFICATIONS,
+        STORAGE_KEYS.EXPO_PUSH_TOKEN,
         STORAGE_KEYS.LAST_SYNC,
       ]);
       return true;

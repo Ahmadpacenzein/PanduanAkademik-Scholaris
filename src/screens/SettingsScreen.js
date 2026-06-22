@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Switch,
@@ -18,6 +19,7 @@ import { colors } from '../styles/colors';
 import { typography } from '../styles/typography';
 import storageManager from '../utils/storageManager';
 import { useAppTheme } from '../theme/ThemeContext';
+import notificationService from '../services/notificationService';
 
 const SettingsScreen = () => {
   const { setDarkMode } = useAppTheme();
@@ -25,6 +27,7 @@ const SettingsScreen = () => {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testingNotification, setTestingNotification] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -70,6 +73,30 @@ const SettingsScreen = () => {
       setSettings(settings);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const testNotification = async () => {
+    setTestingNotification(true);
+    try {
+      const registration = await notificationService.registerNotification();
+      if (!registration.permissionGranted) {
+        Alert.alert(
+          'Izin Notifikasi Diperlukan',
+          'Aktifkan izin notifikasi Scholaris dari pengaturan perangkat.'
+        );
+        return;
+      }
+
+      await notificationService.sendTestNotification();
+      Alert.alert(
+        'Tes Dijadwalkan',
+        'Popup notifikasi akan muncul sekitar 2 detik lagi.'
+      );
+    } catch (error) {
+      Alert.alert('Gagal', `Notifikasi tidak dapat diuji: ${error.message}`);
+    } finally {
+      setTestingNotification(false);
     }
   };
 
@@ -187,6 +214,32 @@ const SettingsScreen = () => {
             {renderLanguageButton('id', 'Indonesia')}
             {renderLanguageButton('en', 'English')}
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <TouchableOpacity
+            style={styles.testButton}
+            onPress={testNotification}
+            disabled={testingNotification}
+            activeOpacity={0.7}
+          >
+            {testingNotification ? (
+              <ActivityIndicator color={colors.onPrimary} />
+            ) : (
+              <MaterialCommunityIcons
+                name="bell-ring"
+                size={22}
+                color={colors.onPrimary}
+              />
+            )}
+            <Text style={[styles.testButtonText, typography.labelMedium]}>
+              Tes Popup Notifikasi
+            </Text>
+          </TouchableOpacity>
+          <Text style={[styles.testHint, typography.bodySmall]}>
+            Local notification dapat diuji di Expo Go. Remote push Android
+            memerlukan development build.
+          </Text>
         </View>
 
         <View style={styles.section}>
@@ -314,6 +367,24 @@ const createStyles = () => StyleSheet.create({
   },
   infoIcon: {
     marginRight: 12,
+  },
+  testButton: {
+    minHeight: 52,
+    borderRadius: 10,
+    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingHorizontal: 16,
+  },
+  testButtonText: {
+    color: colors.onPrimary,
+  },
+  testHint: {
+    color: colors.onSurfaceVariant,
+    marginTop: 8,
+    lineHeight: 18,
   },
 });
 

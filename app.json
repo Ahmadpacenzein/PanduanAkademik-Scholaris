@@ -14,10 +14,18 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.scholaris.panduanakademik",
       "edgeToEdgeEnabled": true
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "defaultChannel": "academic-updates",
+          "color": "#6750A4"
+        }
+      ]
     ]
   }
 }
